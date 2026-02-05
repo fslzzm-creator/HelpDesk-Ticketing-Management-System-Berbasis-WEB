@@ -1,0 +1,48 @@
+<?php
+require_once '../includes/auth.php';
+require_once '../includes/functions.php';
+
+$auth = new Auth();
+$auth->requireLogin();
+$auth->requireRole('admin');
+
+// Get all tickets
+$tickets = getAllTicketsForExport();
+
+// Simple Excel Export
+header('Content-Type: application/vnd.ms-excel');
+header('Content-Disposition: attachment; filename="tickets_export_' . date('Y-m-d') . '.xls"');
+header('Pragma: no-cache');
+header('Expires: 0');
+
+echo '<table border="1">';
+echo '<tr><th colspan="9" style="background-color: #667eea; color: white; padding: 10px; font-size: 16px;">TICKETS REPORT - ' . date('Y-m-d') . '</th></tr>';
+echo '<tr style="background-color: #f2f2f2;">';
+echo '<th>ID</th>';
+echo '<th>Title</th>';
+echo '<th>Description</th>';
+echo '<th>Priority</th>';
+echo '<th>Status</th>';
+echo '<th>Category</th>';
+echo '<th>Created By</th>';
+echo '<th>Assigned To</th>';    
+echo '<th>Created Date</th>';
+echo '</tr>';
+
+foreach ($tickets as $ticket) {
+    echo '<tr>';
+    echo '<td>' . $ticket['ticket_id'] . '</td>';
+    echo '<td>' . htmlspecialchars($ticket['title']) . '</td>';
+    echo '<td>' . htmlspecialchars(substr($ticket['description'], 0, 100)) . '...</td>';
+    echo '<td>' . ucfirst($ticket['priority']) . '</td>';
+    echo '<td>' . ucfirst(str_replace('_', ' ', $ticket['status'])) . '</td>';
+    echo '<td>' . htmlspecialchars($ticket['category']) . '</td>';
+    echo '<td>' . htmlspecialchars($ticket['created_by_name'] . ' (' . $ticket['created_by'] . ')') . '</td>';
+    echo '<td>' . htmlspecialchars($ticket['assigned_to_name'] ?? 'Unassigned') . '</td>';
+    echo '<td>' . date('Y-m-d H:i', strtotime($ticket['created_at'])) . '</td>';
+    echo '</tr>';
+}
+
+echo '</table>';
+exit();
+?>
